@@ -169,6 +169,56 @@ def change_font_size(event=None):
     text_area.config(font=(current_font, current_size))
 
 
+def hide_toolbar(event=None):
+    global show_toolbar
+    if show_toolbar:
+        toolbar_label.pack_forget()
+        show_toolbar = False
+    else:
+        text_area.pack_forget()
+        toolbar_label.pack(side=tk.TOP, fill=tk.X)
+        text_area.pack(fill=tk.BOTH, expand=True)
+        show_toolbar = True
+
+
+def hide_statusbar(event=None):
+    global show_statusbar
+    if show_statusbar:
+        statusbar_label.pack_forget()
+        show_statusbar = False
+    else:
+        text_area.pack_forget()
+        statusbar_label.pack(side=tk.BOTTOM, fill=tk.X)
+        text_area.pack(fill=tk.BOTH, expand=True)
+        show_statusbar = True
+
+
+def bg_color(event=None):
+    color = colorchooser.askcolor()[1]
+    if color:
+        text_area.config(bg=color)
+
+
+def fg_color(event=None):
+    color = colorchooser.askcolor()[1]
+    if color:
+        text_area.config(fg=color)
+
+
+def text_color(event=None):
+    color = colorchooser.askcolor()[1]
+    if color:
+        color_font = font.Font(text_area, text_area.cget('font'))
+        # Configure a tag
+        text_area.tag_configure('colored', font=color_font, foreground=color)
+        # Define current tag
+        current_tag = text_area.tag_names('sel.first')
+        if 'colored' in current_tag:
+            text_area.tag_remove('colored', 'sel.first', 'sel.last')
+        else:
+            text_area.tag_add('colored', 'sel.first', 'sel.last')
+
+
 # Creating the root window
 root = tk.Tk()
 
@@ -299,7 +349,7 @@ show_toolbar.set(True)
 
 # Statusbar Label
 statusbar_label = ttk.Label(root, text='Status Bar')
-statusbar_label.pack(side=tk.BOTTOM)
+statusbar_label.pack(side=tk.BOTTOM, fill=tk.X)
 show_statusbar = tk.BooleanVar()
 show_statusbar.set(True)
 
@@ -309,9 +359,10 @@ view_menu.add_checkbutton(
             label='Tool bar',
             onvalue=True,
             offvalue=0,
-            variable=show_statusbar,
+            variable=show_toolbar,
             image=toolbar_icon,
-            compound=tk.LEFT
+            compound=tk.LEFT,
+            command=hide_toolbar
 )
 view_menu.add_checkbutton(
             label='Status bar',
@@ -319,7 +370,8 @@ view_menu.add_checkbutton(
             offvalue=0,
             variable=show_statusbar,
             image=statusbar_icon,
-            compound=tk.LEFT
+            compound=tk.LEFT,
+            command=hide_statusbar
 )
 
 menubar.add_cascade(label='View', menu=view_menu)
@@ -355,9 +407,9 @@ text_area.config(yscrollcommand=scrollbar.set)
 
 # Creating color select menu
 color_menu = tk.Menu(menubar, tearoff=False)
-color_menu.add_command(label='Selected text')
-color_menu.add_command(label='All text')
-color_menu.add_command(label='Background')
+color_menu.add_command(label='Selected text', command=text_color)
+color_menu.add_command(label='All text', command=fg_color)
+color_menu.add_command(label='Background', command=bg_color)
 menubar.add_cascade(label='Color', menu=color_menu)
 
 root.config(menu=menubar)
@@ -366,5 +418,10 @@ text_area.bind('<<Modified>>', is_modified)
 font_box.bind('<<ComboboxSelected>>', change_font)
 size_box.bind('<<ComboboxSelected>>', change_font_size)
 root.bind('<Control-n>', new_file)
+root.bind('<Control-o>', open_file)
+root.bind('<Control-s>', save)
+# root.bind('<Control-Shift-s>', save_as)
+root.bind('<Control-q>', close)
+root.bind('<Control-f>', find_replace)
 
 root.mainloop()
